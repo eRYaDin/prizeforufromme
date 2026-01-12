@@ -100,6 +100,7 @@ function klikHari() {
 let moveCount = 0;
 let retryCount = 0; // Tambahan untuk retry
 let board = [8, 3, 1, 7, 5, 2, 4, 6, ""];
+let draggedIndex = null;
 
 function puzzle() {
   app.innerHTML = `
@@ -159,6 +160,7 @@ let correctDoor = 0;
 function pintu() {
   if (doorTry === 0) {
     tunjukPintu();
+    setTimeout(acakPintu, 1500); // Auto lanjut tanpa tombol
   } else {
     showDoors();
   }
@@ -171,8 +173,7 @@ function tunjukPintu() {
     <h2>🚪 Pilih Pintu yang Benar</h2>
     <p>Ingat baik-baik pintu ini...</p>
     <button class="door" style="font-size:60px;">🚪 ← INI</button>
-    <button onclick="acakPintu()">Lanjut</button>
-  `;
+  `; // Hapus tombol lanjut
 }
 
 function acakPintu() {
@@ -217,7 +218,7 @@ function pilihPintu(index) {
   
   if (doorTry < 3) {
     document.getElementById("doorMsg").innerText = "Salah 💥 Coba lagi!";
-    setTimeout(() => pintu(), 800);
+    setTimeout(() => showDoors(), 800); // Langsung showDoors lagi
   } else {
     // Setelah 3 kali salah, lanjut juga (curang)
     next();
@@ -239,7 +240,7 @@ function tombolYa() {
       btn.innerText = "YA";
       btn.onclick = () => {
         yaCount++;
-        if (yaCount === 7) {
+        if (yaCount === 18) { // Ubah ke 18
           yaPhase = 1;
         }
         tombolYa();
@@ -247,14 +248,12 @@ function tombolYa() {
       app.appendChild(btn);
     }
   } else {
-    // PHASE 2: YA HARUS HABIS
+    // PHASE 2: YA HARUS HABIS (pakai yaCount yang sudah 18)
     app.innerHTML += `<p>Oke, sekarang habisin semua YA 😈</p>`;
     for (let i = 0; i < yaCount; i++) {
       const btn = document.createElement("button");
+      btn.className = "random-btn";
       btn.innerText = "YA";
-      btn.style.position = "absolute";
-      btn.style.left = Math.random() * 300 + "px";
-      btn.style.top = Math.random() * 300 + "px";
       btn.onclick = () => {
         btn.remove();
         yaCount--;
@@ -272,6 +271,7 @@ function tombolYa() {
 let tttBoard = Array(10).fill(""); // Index 9 untuk luar grid
 let winCount = 0;
 let gameActive = true;
+let winLine = null; // Tambahan untuk garis kemenangan
 
 function ticTacToe() {
   gameActive = true;
@@ -288,7 +288,9 @@ function ticTacToe() {
   // Hanya render 0-8, index 9 tidak ditampilkan
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement("div");
-    cell.className = tttBoard[i] ? "cell filled" : "cell";
+    cell.className = "cell";
+    if (tttBoard[i]) cell.classList.add("filled");
+    if (winLine && winLine.includes(i)) cell.classList.add("win"); // Tambah class win
     cell.innerText = tttBoard[i];
     cell.onclick = () => playerMove(i);
     grid.appendChild(cell);
@@ -339,6 +341,7 @@ function botMove() {
     
     setTimeout(() => {
       tttBoard = Array(10).fill("");
+      winLine = null; // Reset winLine
       if (winCount === 3) {
         next();
       } else {
@@ -360,6 +363,11 @@ function botMove() {
 
 function botCheatOutside() {
   tttBoard[9] = "⭕"; // Naro di luar grid
+  // Paksa garis menang palsu (diagonal tengah)
+  tttBoard[0] = "⭕";
+  tttBoard[4] = "⭕";
+  tttBoard[8] = "⭕";
+  winLine = [0, 4, 8];
   app.innerHTML += `<p>⭕ muncul DI LUAR PAPAN 😨</p>`;
 }
 
@@ -367,6 +375,11 @@ function botOverride() {
   const userCells = tttBoard.map((v, i) => v === "❌" ? i : null).filter(v => v !== null && v < 9);
   const target = userCells[Math.floor(Math.random() * userCells.length)];
   tttBoard[target] = "⭕"; // Nimpa user
+  // Paksa garis menang palsu (vertikal kanan)
+  tttBoard[2] = "⭕";
+  tttBoard[5] = "⭕";
+  tttBoard[8] = "⭕";
+  winLine = [2, 5, 8];
   app.innerHTML += `<p>Eh? Kok X kamu ketimpa? 😐</p>`;
 }
 
@@ -395,6 +408,7 @@ function botCheat() {
   
   setTimeout(() => {
     tttBoard = Array(10).fill("");
+    winLine = null; // Reset winLine
     if (winCount === 3) {
       next();
     } else {
@@ -407,6 +421,7 @@ function endGame(msg) {
   gameActive = false;
   setTimeout(() => {
     tttBoard = Array(10).fill("");
+    winLine = null; // Reset winLine
     ticTacToe();
   }, 1500);
 }
