@@ -98,15 +98,15 @@ function klikHari() {
 
 // ===== STAGE 3: PUZZLE DRAG & DROP =====
 let moveCount = 0;
+let retryCount = 0; // Tambahan untuk retry
 let board = [8, 3, 1, 7, 5, 2, 4, 6, ""];
-let draggedIndex = null;
 
 function puzzle() {
   app.innerHTML = `
     <h2>🧩 Susun Puzzle</h2>
     <p>Susun angka 1-8 dengan benar!</p>
     <div class="puzzle" id="puzzle"></div>
-    <p class="msg">Gerakan: ${moveCount}/5</p>
+    <p class="msg">Gerakan: ${moveCount}/5 | Retry: ${retryCount}/3</p>
   `;
 
   const puzzleDiv = document.getElementById("puzzle");
@@ -133,7 +133,15 @@ function puzzle() {
         moveCount++;
         
         if (moveCount >= 5) {
-          setTimeout(() => next(), 300);
+          retryCount++;
+          moveCount = 0;
+          board = [8, 3, 1, 7, 5, 2, 4, 6, ""]; // Reset board
+          
+          if (retryCount === 3) {
+            next();
+          } else {
+            setTimeout(() => puzzle(), 500);
+          }
         } else {
           puzzle();
         }
@@ -199,46 +207,69 @@ function showDoors() {
 }
 
 function pilihPintu(index) {
+  if (index === correctDoor) {
+    // Jika benar, langsung lanjut
+    next();
+    return;
+  }
+  
   doorTry++;
   
   if (doorTry < 3) {
     document.getElementById("doorMsg").innerText = "Salah 💥 Coba lagi!";
     setTimeout(() => pintu(), 800);
   } else {
+    // Setelah 3 kali salah, lanjut juga (curang)
     next();
   }
 }
 
 // ===== STAGE 5: TOMBOL YA RANDOM + HARUS HABIS =====
-let yaCount = 7;
+let yaPhase = 0; // 0 = nambah, 1 = habisin
+let yaCount = 1;
 
 function tombolYa() {
-  app.innerHTML = `
-    <h2>✨ Mau hadiah?</h2>
-    <p>Klik SEMUA tombol YA!</p>
-    <p style="font-size:20px; font-weight:bold;">Sisa: ${yaCount}</p>
-  `;
+  app.innerHTML = `<h2>✨ Mau hadiah?</h2>`;
 
-  for (let i = 0; i < yaCount; i++) {
-    const btn = document.createElement("button");
-    btn.className = "random-btn";
-    btn.innerText = "YA";
-    btn.style.left = Math.random() * 300 + 20 + "px";
-    btn.style.top = Math.random() * 300 + 80 + "px";
-    btn.onclick = function() {
-      this.remove();
-      yaCount--;
-      document.querySelector("p:nth-child(3)").innerText = `Sisa: ${yaCount}`;
-      if (yaCount === 0) {
-        setTimeout(() => next(), 300);
-      }
-    };
-    app.appendChild(btn);
+  if (yaPhase === 0) {
+    // PHASE 1: YA MAKIN BANYAK
+    app.innerHTML += `<p>Klik YA...</p>`;
+    for (let i = 0; i < yaCount; i++) {
+      const btn = document.createElement("button");
+      btn.innerText = "YA";
+      btn.onclick = () => {
+        yaCount++;
+        if (yaCount === 7) {
+          yaPhase = 1;
+        }
+        tombolYa();
+      };
+      app.appendChild(btn);
+    }
+  } else {
+    // PHASE 2: YA HARUS HABIS
+    app.innerHTML += `<p>Oke, sekarang habisin semua YA 😈</p>`;
+    for (let i = 0; i < yaCount; i++) {
+      const btn = document.createElement("button");
+      btn.innerText = "YA";
+      btn.style.position = "absolute";
+      btn.style.left = Math.random() * 300 + "px";
+      btn.style.top = Math.random() * 300 + "px";
+      btn.onclick = () => {
+        btn.remove();
+        yaCount--;
+        if (yaCount === 0) {
+          yaPhase = 0;
+          next();
+        }
+      };
+      app.appendChild(btn);
+    }
   }
 }
 
 // ===== STAGE 6: TIC TAC TOE CURANG =====
-let tttBoard = Array(9).fill("");
+let tttBoard = Array(10).fill(""); // Index 9 untuk luar grid
 let winCount = 0;
 let gameActive = true;
 
@@ -254,13 +285,14 @@ function ticTacToe() {
 
   const grid = document.getElementById("grid");
   
-  tttBoard.forEach((val, i) => {
+  // Hanya render 0-8, index 9 tidak ditampilkan
+  for (let i = 0; i < 9; i++) {
     const cell = document.createElement("div");
-    cell.className = val ? "cell filled" : "cell";
-    cell.innerText = val;
+    cell.className = tttBoard[i] ? "cell filled" : "cell";
+    cell.innerText = tttBoard[i];
     cell.onclick = () => playerMove(i);
     grid.appendChild(cell);
-  });
+  }
 }
 
 function playerMove(i) {
@@ -273,7 +305,7 @@ function playerMove(i) {
     return;
   }
   
-  if (tttBoard.every(c => c !== "")) {
+  if (tttBoard.slice(0, 9).every(c => c !== "")) {
     endGame("Seri!");
     return;
   }
@@ -285,18 +317,57 @@ function playerMove(i) {
 }
 
 function botMove() {
-  const empty = tttBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+  const empty = tttBoard.slice(0, 9).filter(c => c === "").length;
   
-  if (empty.length <= 3) {
-    botCheat();
-  } else {
-    const pick = empty[Math.floor(Math.random() * empty.length)];
-    tttBoard[pick] = "⭕";
+  if (empty <= 2) {
+    // Curang saat hampir seri
+    winCount++;
+    gameActive = false;
     
-    if (checkWin("⭕")) {
-      botCheat();
+    const cheatType = winCount % 2 === 0 ? "override" : "outside";
+    if (cheatType === "override") {
+      botOverride();
+    } else {
+      botCheatOutside();
     }
+    
+    app.innerHTML = `
+      <h2>⭕ BOT MENANG</h2>
+      <p>Ini harusnya seri...</p>
+      <p>(${winCount}/3)</p>
+    `;
+    
+    setTimeout(() => {
+      tttBoard = Array(10).fill("");
+      if (winCount === 3) {
+        next();
+      } else {
+        ticTacToe();
+      }
+    }, 2000);
+    return;
   }
+  
+  // Normal bot move
+  const emptyCells = tttBoard.slice(0, 9).map((v, i) => v === "" ? i : null).filter(v => v !== null);
+  const pick = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  tttBoard[pick] = "⭕";
+  
+  if (checkWin("⭕")) {
+    botCheat();
+  }
+}
+
+function botCheatOutside() {
+  tttBoard[9] = "⭕"; // Naro di luar grid
+  app.innerHTML += `<p>⭕ muncul DI LUAR PAPAN 😨</p>`;
+}
+
+function botOverride() {
+  const userCells = tttBoard.map((v, i) => v === "❌" ? i : null).filter(v => v !== null && v < 9);
+  const target = userCells[Math.floor(Math.random() * userCells.length)];
+  tttBoard[target] = "⭕"; // Nimpa user
+  app.innerHTML += `<p>Eh? Kok X kamu ketimpa? 😐</p>`;
 }
 
 function checkWin(player) {
@@ -323,7 +394,7 @@ function botCheat() {
   `;
   
   setTimeout(() => {
-    tttBoard = Array(9).fill("");
+    tttBoard = Array(10).fill("");
     if (winCount === 3) {
       next();
     } else {
@@ -335,7 +406,7 @@ function botCheat() {
 function endGame(msg) {
   gameActive = false;
   setTimeout(() => {
-    tttBoard = Array(9).fill("");
+    tttBoard = Array(10).fill("");
     ticTacToe();
   }, 1500);
 }
