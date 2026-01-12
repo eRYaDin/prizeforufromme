@@ -1,0 +1,437 @@
+// ===== CORE - PENGATUR ALUR =====
+let step = 0;
+const app = document.getElementById("app");
+
+function next() {
+  step++;
+  render();
+}
+
+function render() {
+  if (step === 0) identitas();
+  if (step === 1) klikHari();
+  if (step === 2) puzzle();
+  if (step === 3) pintu();
+  if (step === 4) tombolYa();
+  if (step === 5) ticTacToe();
+  if (step === 6) yakinLoop();
+  if (step === 7) tiket();
+}
+
+// ===== STAGE 1: IDENTITAS → UCAPAN ULTAH =====
+let attempt = 0;
+let userName = "";
+let birthDate = "";
+
+function identitas() {
+  app.innerHTML = `
+    <h2>🎂 Sebelum mulai...</h2>
+    <input id="nama" type="text" placeholder="Nama lengkap">
+    <input id="tgl" type="date">
+    <button onclick="cekIdentitas()">Lanjut</button>
+    <p class="msg" id="msg"></p>
+  `;
+}
+
+function cekIdentitas() {
+  attempt++;
+  userName = document.getElementById("nama").value;
+  birthDate = document.getElementById("tgl").value;
+
+  if (!userName || !birthDate) {
+    document.getElementById("msg").innerText = "Isi dulu dong 😊";
+    return;
+  }
+
+  if (attempt < 3) {
+    document.getElementById("msg").innerText = "Hmm… kayaknya salah 😏";
+  } else {
+    ucapanUltah();
+  }
+}
+
+function ucapanUltah() {
+  app.innerHTML = `
+    <div class="birthday">
+      <h2>🎉 SELAMAT ULANG TAHUN 🎉</h2>
+      <p style="font-size:28px; font-weight:bold; color:#ff6b6b;">${userName} 🥳</p>
+      <p>Hari ini kamu resmi masuk ke permainan hadiah spesial!</p>
+      <p style="font-size:40px; margin:20px 0;">🎁✨🎈</p>
+      <button onclick="next()">Mulai Permainan 🎮</button>
+    </div>
+  `;
+}
+
+// ===== STAGE 2: KLIK HARI HIDUP (REAL + KLIK DIMANA AJA) =====
+let klik = 0;
+let targetKlik = 12;
+
+function hitungHariHidup() {
+  const lahir = new Date(birthDate);
+  const hariIni = new Date();
+  return Math.floor((hariIni - lahir) / (1000 * 60 * 60 * 24));
+}
+
+function klikHari() {
+  const hari = hitungHariHidup();
+
+  app.innerHTML = `
+    <h2>⏳ Kamu sudah hidup</h2>
+    <p style="font-size:36px; font-weight:bold; color:#ff6b6b;">${hari} hari</p>
+    <div class="click-area">
+      <p>Klik layar ini sebanyak hari hidupmu!</p>
+      <p style="font-size:28px; margin-top:30px;">👆</p>
+      <p style="font-size:24px; font-weight:bold;">Klik: ${klik}</p>
+    </div>
+  `;
+
+  app.onclick = () => {
+    klik++;
+    if (klik === targetKlik) {
+      app.onclick = null;
+      next();
+    } else {
+      klikHari();
+    }
+  };
+}
+
+// ===== STAGE 3: PUZZLE DRAG & DROP =====
+let moveCount = 0;
+let board = [8, 3, 1, 7, 5, 2, 4, 6, ""];
+let draggedIndex = null;
+
+function puzzle() {
+  app.innerHTML = `
+    <h2>🧩 Susun Puzzle</h2>
+    <p>Susun angka 1-8 dengan benar!</p>
+    <div class="puzzle" id="puzzle"></div>
+    <p class="msg">Gerakan: ${moveCount}/5</p>
+  `;
+
+  const puzzleDiv = document.getElementById("puzzle");
+  
+  board.forEach((val, i) => {
+    const piece = document.createElement("div");
+    piece.className = val === "" ? "puzzle-piece empty" : "puzzle-piece";
+    piece.innerText = val;
+    piece.draggable = val !== "";
+    piece.dataset.index = i;
+
+    if (val !== "") {
+      piece.ondragstart = (e) => {
+        draggedIndex = i;
+      };
+    }
+
+    piece.ondragover = (e) => e.preventDefault();
+    
+    piece.ondrop = (e) => {
+      e.preventDefault();
+      if (draggedIndex !== null && val === "") {
+        [board[draggedIndex], board[i]] = [board[i], board[draggedIndex]];
+        moveCount++;
+        
+        if (moveCount >= 5) {
+          setTimeout(() => next(), 300);
+        } else {
+          puzzle();
+        }
+      }
+    };
+
+    puzzleDiv.appendChild(piece);
+  });
+}
+
+// ===== STAGE 4: PINTU ACAK + CURANG =====
+let doorTry = 0;
+let correctDoor = 0;
+
+function pintu() {
+  if (doorTry === 0) {
+    tunjukPintu();
+  } else {
+    showDoors();
+  }
+}
+
+function tunjukPintu() {
+  correctDoor = Math.floor(Math.random() * 6);
+  
+  app.innerHTML = `
+    <h2>🚪 Pilih Pintu yang Benar</h2>
+    <p>Ingat baik-baik pintu ini...</p>
+    <button class="door" style="font-size:60px;">🚪 ← INI</button>
+    <button onclick="acakPintu()">Lanjut</button>
+  `;
+}
+
+function acakPintu() {
+  app.innerHTML = `
+    <h2>🌀 Pintu sedang diacak...</h2>
+    <p style="font-size:50px;">🌪️</p>
+  `;
+  
+  setTimeout(() => {
+    showDoors();
+  }, 1500);
+}
+
+function showDoors() {
+  app.innerHTML = `
+    <h2>🚪 Pilih Pintunya!</h2>
+    <p class="msg" id="doorMsg">Percobaan: ${doorTry}/3</p>
+    <div class="door-container" id="doorContainer"></div>
+  `;
+
+  const container = document.getElementById("doorContainer");
+  
+  for (let i = 0; i < 6; i++) {
+    const btn = document.createElement("button");
+    btn.className = "door";
+    btn.innerText = "🚪";
+    btn.style.left = (i % 3) * 100 + Math.random() * 30 + "px";
+    btn.style.top = Math.floor(i / 3) * 100 + Math.random() * 30 + "px";
+    btn.onclick = () => pilihPintu(i);
+    container.appendChild(btn);
+  }
+}
+
+function pilihPintu(index) {
+  doorTry++;
+  
+  if (doorTry < 3) {
+    document.getElementById("doorMsg").innerText = "Salah 💥 Coba lagi!";
+    setTimeout(() => pintu(), 800);
+  } else {
+    next();
+  }
+}
+
+// ===== STAGE 5: TOMBOL YA RANDOM + HARUS HABIS =====
+let yaCount = 7;
+
+function tombolYa() {
+  app.innerHTML = `
+    <h2>✨ Mau hadiah?</h2>
+    <p>Klik SEMUA tombol YA!</p>
+    <p style="font-size:20px; font-weight:bold;">Sisa: ${yaCount}</p>
+  `;
+
+  for (let i = 0; i < yaCount; i++) {
+    const btn = document.createElement("button");
+    btn.className = "random-btn";
+    btn.innerText = "YA";
+    btn.style.left = Math.random() * 300 + 20 + "px";
+    btn.style.top = Math.random() * 300 + 80 + "px";
+    btn.onclick = function() {
+      this.remove();
+      yaCount--;
+      document.querySelector("p:nth-child(3)").innerText = `Sisa: ${yaCount}`;
+      if (yaCount === 0) {
+        setTimeout(() => next(), 300);
+      }
+    };
+    app.appendChild(btn);
+  }
+}
+
+// ===== STAGE 6: TIC TAC TOE CURANG =====
+let tttBoard = Array(9).fill("");
+let winCount = 0;
+let gameActive = true;
+
+function ticTacToe() {
+  gameActive = true;
+  
+  app.innerHTML = `
+    <h2>❌ Tic Tac Toe ⭕</h2>
+    <p>Main melawan bot!</p>
+    <div id="grid"></div>
+    <p class="msg">Bot menang: ${winCount}/3</p>
+  `;
+
+  const grid = document.getElementById("grid");
+  
+  tttBoard.forEach((val, i) => {
+    const cell = document.createElement("div");
+    cell.className = val ? "cell filled" : "cell";
+    cell.innerText = val;
+    cell.onclick = () => playerMove(i);
+    grid.appendChild(cell);
+  });
+}
+
+function playerMove(i) {
+  if (!gameActive || tttBoard[i] !== "") return;
+  
+  tttBoard[i] = "❌";
+  
+  if (checkWin("❌")) {
+    endGame("Kamu menang!");
+    return;
+  }
+  
+  if (tttBoard.every(c => c !== "")) {
+    endGame("Seri!");
+    return;
+  }
+  
+  setTimeout(() => {
+    botMove();
+    ticTacToe();
+  }, 500);
+}
+
+function botMove() {
+  const empty = tttBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+  
+  if (empty.length <= 3) {
+    botCheat();
+  } else {
+    const pick = empty[Math.floor(Math.random() * empty.length)];
+    tttBoard[pick] = "⭕";
+    
+    if (checkWin("⭕")) {
+      botCheat();
+    }
+  }
+}
+
+function checkWin(player) {
+  const wins = [
+    [0,1,2], [3,4,5], [6,7,8],
+    [0,3,6], [1,4,7], [2,5,8],
+    [0,4,8], [2,4,6]
+  ];
+  
+  return wins.some(combo => 
+    combo.every(i => tttBoard[i] === player)
+  );
+}
+
+function botCheat() {
+  gameActive = false;
+  winCount++;
+  
+  app.innerHTML = `
+    <h2>⭕ BOT MENANG!</h2>
+    <p>Tunggu... kok di luar papan? 🤨</p>
+    <div class="bot-cheat">⭕</div>
+    <p style="font-size:20px; font-weight:bold;">(${winCount}/3)</p>
+  `;
+  
+  setTimeout(() => {
+    tttBoard = Array(9).fill("");
+    if (winCount === 3) {
+      next();
+    } else {
+      ticTacToe();
+    }
+  }, 2000);
+}
+
+function endGame(msg) {
+  gameActive = false;
+  setTimeout(() => {
+    tttBoard = Array(9).fill("");
+    ticTacToe();
+  }, 1500);
+}
+
+// ===== STAGE 7: YAKIN LOOP =====
+let yakin = 0;
+const tanya = ["Yakin?", "Beneran?", "Masih mau?", "Gak ragu?", "Siap?"];
+
+function yakinLoop() {
+  app.innerHTML = `
+    <h2>🤔 ${tanya[yakin]}</h2>
+    <p>Klik YA untuk lanjut!</p>
+    <button onclick="yakinNext()">YA</button>
+  `;
+}
+
+function yakinNext() {
+  yakin++;
+  if (yakin === 5) {
+    next();
+  } else {
+    yakinLoop();
+  }
+}
+
+// ===== STAGE 8: TIKET PALSU → ASLI =====
+function tiket() {
+  app.innerHTML = `
+    <div class="fire">🔥</div>
+    <h2>OH TIDAK!</h2>
+    <p>Tiket kebakar...</p>
+  `;
+  
+  setTimeout(() => {
+    tiketAsli();
+  }, 1500);
+}
+
+function tiketAsli() {
+  app.innerHTML = `
+    <h2>🎫 TIKET BANTUAN SPESIAL RAFIF</h2>
+    <div class="tiket-box">
+      <p style="font-size: 20px; font-weight: bold;">✨ SCREENSHOT TIKET INI ✨</p>
+      <p>Tiket ini memberi <strong>satu kali kesempatan</strong> untuk meminta bantuan spesial dari Rafif.</p>
+    </div>
+    
+    <div class="ketentuan">
+      <h3>🌟 Apa yang dimaksud "bantuan spesial"?</h3>
+      <p>Bantuan spesial ialah bantuan yang:</p>
+      <ul>
+        <li>Membutuhkan waktu dan usaha lebih dari biasanya</li>
+        <li>Tidak dilakukan setiap hari</li>
+        <li>Diberikan secara sadar dan ikhlas</li>
+        <li>Dilakukan sekali untuk satu keperluan tertentu</li>
+      </ul>
+      
+      <h3>🟢 Contoh bantuan yang BOLEH</h3>
+      <ul>
+        <li>Ditemani jalan ke tempat tertentu yang bermakna</li>
+        <li>Ditemani melakukan sesuatu sampai selesai (bareng, bukan digantikan)</li>
+        <li>Meluangkan waktu khusus di hari yang disepakati</li>
+        <li>Dibantu memikirkan keputusan penting (diskusi, bukan menentukan)</li>
+        <li>Dibantu menyiapkan sesuatu yang penting untuk kamu</li>
+      </ul>
+      
+      <h3>🔴 Contoh bantuan yang TIDAK BOLEH</h3>
+      <ul>
+        <li>Uang atau sesuatu yang bernilai uang</li>
+        <li>Permintaan berbahaya, ilegal, atau melanggar etika</li>
+        <li>Contekan penuh, kecurangan akademik, atau menggantikan tanggung jawab</li>
+        <li>Permintaan tanpa batas waktu atau bisa diulang-ulang</li>
+        <li>Permintaan yang membuat salah satu pihak tidak nyaman</li>
+      </ul>
+      
+      <h3>🚶 Tentang jalan-jalan</h3>
+      <p>Jika bantuan berupa jalan-jalan:</p>
+      <ul>
+        <li>Rafif bersedia menemani</li>
+        <li>Waktu dan tempat dibicarakan bersama</li>
+        <li>Biaya tidak otomatis ditanggung Rafif</li>
+      </ul>
+      
+      <h3>⚠️ Batasan penting</h3>
+      <ul>
+        <li>Tiket ini hanya berlaku <strong>satu kali</strong></li>
+        <li>Tidak dapat ditukar, dipindahtangankan, atau diulang</li>
+        <li>Rafif berhak menolak atau menyesuaikan permintaan agar tetap wajar dan aman</li>
+        <li>Bantuan dilakukan berdasarkan kesepakatan kedua pihak</li>
+      </ul>
+    </div>
+    
+    <p style="margin-top: 20px; font-size: 16px; color: #ff6b6b;">
+      💝 Selamat! Gunakan dengan bijak ya~
+    </p>
+  `;
+}
+
+// ===== JALANKAN GAME =====
+render();
