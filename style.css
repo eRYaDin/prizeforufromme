@@ -1,69 +1,121 @@
+/* RESET & BASE */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: "Comic Sans MS", cursive;
   background: #ffecec;
-  margin: 0;
-  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 20px;
 }
 
+/* CONTAINER UTAMA */
 #app {
   border: 4px solid black;
   padding: 30px;
-  width: 90%;
-  max-width: 400px;
+  width: 100%;
+  max-width: 450px;
+  min-height: 400px;
   background: white;
   text-align: center;
   box-shadow: 6px 6px black;
+  position: relative;
 }
 
+/* TYPOGRAPHY */
+h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 24px;
+}
+
+p {
+  font-size: 18px;
+  margin: 15px 0;
+  line-height: 1.5;
+}
+
+/* INPUT */
 input {
   border: 3px solid black;
-  padding: 10px;
+  padding: 12px;
   font-size: 16px;
-  width: 90%;
-  margin: 10px 0;
+  width: 100%;
+  max-width: 300px;
+  margin: 10px auto;
   font-family: inherit;
+  display: block;
 }
 
+input[type="date"] {
+  padding: 10px;
+}
+
+/* BUTTON */
 button {
   border: 3px solid black;
   background: yellow;
-  padding: 10px 20px;
+  padding: 12px 24px;
   cursor: pointer;
   font-size: 16px;
-  margin: 5px;
+  margin: 8px;
   font-family: inherit;
   transition: transform 0.1s;
+  font-weight: bold;
 }
 
 button:hover {
   transform: scale(1.05);
+  background: #ffeb3b;
 }
 
 button:active {
   transform: scale(0.95);
 }
 
-p {
-  font-size: 18px;
-  margin: 15px 0;
-}
-
+/* MESSAGE */
 .msg {
-  min-height: 25px;
+  min-height: 30px;
   color: #ff4444;
   font-weight: bold;
+  font-size: 18px;
 }
 
-.door {
-  font-size: 60px;
-  padding: 20px;
-  margin: 10px;
+/* UCAPAN ULTAH */
+.birthday {
+  animation: fadeIn 0.8s;
 }
 
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+}
+
+/* KLIK AREA (STAGE 2) */
+.click-area {
+  min-height: 300px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.click-area:active {
+  background: #fff9e6;
+}
+
+/* PUZZLE (STAGE 3) */
 .puzzle {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -79,36 +131,106 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  cursor: pointer;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: grab;
+  transition: transform 0.1s;
 }
 
-.tiket-box {
-  border: 5px dashed black;
-  padding: 20px;
-  background: #fff9c4;
+.puzzle-piece:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+
+.puzzle-piece.empty {
+  background: white;
+  border-style: dashed;
+}
+
+/* PINTU (STAGE 4) */
+.door-container {
+  position: relative;
+  min-height: 350px;
   margin: 20px 0;
-  animation: fadeIn 0.5s;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.door {
+  font-size: 50px;
+  padding: 15px 20px;
+  position: absolute;
+  transition: all 0.3s;
 }
 
+/* TOMBOL YA RANDOM (STAGE 5) */
+.random-btn {
+  position: absolute;
+  animation: pop 0.3s;
+}
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* TIC TAC TOE (STAGE 6) */
+#grid {
+  display: grid;
+  grid-template-columns: repeat(3, 80px);
+  gap: 10px;
+  margin: 20px auto;
+  justify-content: center;
+}
+
+.cell {
+  border: 3px solid black;
+  width: 80px;
+  height: 80px;
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: white;
+  transition: background 0.2s;
+}
+
+.cell:hover:not(.filled) {
+  background: #fffacd;
+}
+
+.cell.filled {
+  cursor: not-allowed;
+}
+
+.bot-cheat {
+  font-size: 60px;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* TIKET */
 .fire {
   font-size: 80px;
   animation: burn 0.3s infinite;
 }
 
 @keyframes burn {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
 }
 
-h2 {
-  margin-top: 0;
-  color: #333;
+.tiket-box {
+  border: 5px dashed black;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+  margin: 20px 0;
+  animation: fadeIn 0.5s;
 }
 
 .ketentuan {
@@ -119,15 +241,47 @@ h2 {
   padding: 15px;
   background: #fffef7;
   border: 2px solid #333;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .ketentuan h3 {
   margin-top: 15px;
   margin-bottom: 8px;
   color: #ff6b6b;
+  font-size: 16px;
 }
 
 .ketentuan ul {
   margin: 5px 0;
   padding-left: 20px;
+}
+
+.ketentuan li {
+  margin: 5px 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 500px) {
+  #app {
+    padding: 20px;
+  }
+  
+  h2 {
+    font-size: 20px;
+  }
+  
+  .door {
+    font-size: 40px;
+  }
+  
+  #grid {
+    grid-template-columns: repeat(3, 70px);
+  }
+  
+  .cell {
+    width: 70px;
+    height: 70px;
+    font-size: 35px;
+  }
 }
