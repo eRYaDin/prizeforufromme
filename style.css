@@ -203,6 +203,16 @@ button:active {
   cursor: not-allowed;
 }
 
+.cell.win {
+  background: red;
+  color: white;
+  animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+  50% { background: yellow; }
+}
+
 .bot-cheat {
   font-size: 60px;
   animation: shake 0.5s;
